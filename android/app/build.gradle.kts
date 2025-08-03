@@ -95,6 +95,15 @@ android {
     }
 
     namespace = "io.rebble.cobble"
+    // 添加支持较新的PKCS#8格式密钥
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 //    lint {
 //        isCheckReleaseBuilds = false
 //        disable("InvalidPackage")

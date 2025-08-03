@@ -30,6 +30,10 @@ android {
     if (System.getenv("ANDROID_NDK_HOME") != null) {
         ndkPath = System.getenv("ANDROID_NDK_HOME")
     }
+    
+    // 明确指定NDK版本以解决版本冲突
+    ndkVersion = "27.0.12077973"
+    
     compileSdk = 35
 
     sourceSets {
@@ -69,6 +73,10 @@ android {
             storeFile = file("../key.jks")
             storePassword = System.getenv("KEY_PASSWORD")
         }
+        // 添加一个不使用签名的配置用于调试
+        create("unsigned") {
+            // 不设置签名信息
+        }
     }
 
     buildTypes {
@@ -78,7 +86,10 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
         getByName("debug") {
-            if (System.getenv("NIGHTLY") == "true") {
+            // 在CI环境中使用unsigned配置避免签名问题
+            if (System.getenv("CI") == "true") {
+                signingConfig = signingConfigs.getByName("unsigned")
+            } else if (System.getenv("NIGHTLY") == "true") {
                 signingConfig = signingConfigs.getByName("nightly")
             }
         }

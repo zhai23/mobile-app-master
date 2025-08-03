@@ -1,0 +1,7 @@
+/.gradle
+/captures/
+/local.properties
+GeneratedPluginRegistrant.java
+/shared/.gradle
+buildSrc/build
+buildSrc/.gradle

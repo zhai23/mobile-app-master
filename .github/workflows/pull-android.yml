@@ -1,0 +1,47 @@
+name: Check Android PR
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'lib/**'
+      - 'lang/**'
+      - 'fonts/**'
+      - 'pubspec*'
+      - 'pigeons/**'
+      - 'test/**'
+      - '.github/workflows/pull-android.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+      - uses: dart-lang/setup-dart@v1.4
+      - run: dart pub global activate fvm
+      - run: fvm install
+      - run: fvm flutter pub get
+      - run: fvm flutter analyze
+        continue-on-error: true
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Run Android unit tests
+        working-directory: android
+        run: ./gradlew test
+      - name: Flutter test
+        run: fvm flutter test
+      - run: fvm flutter build apk --debug
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload golden failures
+        uses: actions/upload-artifact@v4
+        with:
+          name: goldens-failures
+          path: test/components/failures/
+          if-no-files-found: 'ignore'
+        continue-on-error: true

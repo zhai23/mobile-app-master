@@ -1,0 +1,42 @@
+name: Android Release
+
+# Controls when the action will run.
+# This could probably use improvement
+on:
+  issues:
+    types: [closed]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    environment: Staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+      - uses: dart-lang/setup-dart@v1.4
+      - run: dart pub global activate fvm
+      - run: echo $KEY_JKS | base64 -d > android/key.jks
+        env:
+          KEY_JKS: ${{ secrets.KEY_JKS }}
+      - run: fvm install
+      - run: fvm flutter pub get
+      - run: fvm flutter analyze
+        continue-on-error: true
+      - run: fvm flutter test
+      - run: fvm flutter build apk --release
+        env:
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ALIAS_PASSWORD: ${{ secrets.ALIAS_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/apk/release/app-release.apk
